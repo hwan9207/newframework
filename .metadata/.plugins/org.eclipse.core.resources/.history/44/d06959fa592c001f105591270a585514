@@ -1,0 +1,8 @@
+package com.kh.spring.member.model.service;
+
+public interface MemberService {
+
+	 int returnNum();
+
+	//void login(String id, String pwd);
+}

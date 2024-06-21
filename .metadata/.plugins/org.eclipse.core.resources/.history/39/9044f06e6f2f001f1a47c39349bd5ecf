@@ -1,0 +1,25 @@
+package com.kh.spring.board.model.repository;
+
+import java.util.List;
+import java.util.Map;
+
+import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.stereotype.Repository;
+
+import com.kh.spring.board.model.vo.Board;
+
+@Repository
+public class BoardRepository {
+
+	public int boardCount(SqlSessionTemplate sqlsession) {
+		return sqlsession.selectOne("boardMapper.boardCount");
+	}
+	
+	public List<Board> findAll(SqlSessionTemplate sqlsession,Map<String, Integer> map){
+		return sqlsession.selectList("boardMapper.findAll" ,map);
+	}
+	
+	public int searchCount(SqlSessionTemplate sqlsession,Map<String, Integer> map) {
+		return sqlsession.selectOne("boardMapper.searchCount",map);
+	}
+}
