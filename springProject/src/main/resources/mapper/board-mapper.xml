@@ -60,15 +60,15 @@
 				  STATUS = 'Y'
 		  <if test="condition == 'writer'">
             AND
-                  BOARD_WRITER LIKE '%' || 'u' || '%';
+                  BOARD_WRITER 
 		  </if>  
 		  <if test="condition == 'title'">
             AND
-                  BOARD_WRITER LIKE '%' || 'u' || '%';
+                  BOARD_TITLE  
 		  </if>  
 		  <if test="condition == 'content'">
             AND
-                  BOARD_WRITER LIKE '%' || 'u' || '%';
+                  BOARD_CONTENT 
 		  </if>  
 		  		  LIKE '%' || #{keyword} ||  '%'
 	</select>
@@ -78,7 +78,7 @@
 				BOARD_NO boardNo,
 				BOARD_TITLE boardTitle,
 				BOARD_CONTENT boardContent,
-				BOARD_WRITER boardwriter,
+				BOARD_WRITER boardWriter,
 				CREATE_DATE createDate,
 				ORIGIN_NAME originName
 		 FROM
@@ -96,6 +96,26 @@
 	 	   AND  BOARD_CONTNET
 	 	</otherwise>
 	 </choose>
-	 		LIKE '%' || # {keyword} || '%'
+	 		LIKE '%' || #{keyword} || '%' ORDER BY BOARD_NO DESC
 	</select>
+	
+	<insert id="insert" parameterType="board"> 
+		INSERT 
+			INTO 
+				 BOARD (
+				 	 BOARD_NO, 
+				 	 BOARD_TITLE, 
+				 	 BOARD_CONTENT, 
+				 	 BOARD_WRITER, 
+				 	 ORIGIN_NAME, 
+				 	 CHANGE_NAME ) 
+	 	  VALUES 
+	 	  				( 
+	  				SEQ_BNO.NEXTVAL, 
+	  				#{boardTitle}, 
+	  				#{boardContent}, 
+	  				#{boardWriter}, 
+	  				#{originName}, 
+	  				#{changeName} ) 
+	</insert>
 </mapper>

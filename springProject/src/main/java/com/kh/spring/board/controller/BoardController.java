@@ -1,14 +1,22 @@
 package com.kh.spring.board.controller;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.servlet.http.HttpSession;
 
 import org.apache.ibatis.session.RowBounds;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.kh.spring.board.model.service.BoardService;
 import com.kh.spring.board.model.vo.Board;
@@ -184,11 +192,11 @@ public class BoardController {
 		map.put("endValue", endValue);
 		
 		List<Board> boardList = boardService.findAll(map);
-		/*
+		
 		log.info("조회된 게시물의 개수 : {}", boardList.size());
 		log.info("-----------------------------------------");
 		log.info("조회된 게시글 목록 : {}", boardList);
-		*/
+	
 		model.addAttribute("list", boardList);
 		model.addAttribute("pageInfo", pageInfo);
 		
@@ -225,7 +233,7 @@ public class BoardController {
 		log.info("검색 조건에 부합하는 행의 수 : {}", searchCount);
 		int currentPage = page;
 		int pageLimit = 3;
-		int boardLimit = 3;
+		int boardLimit = 10;
 		
 		/* 페이징 넣는 페이지들의 공통영역으로 common/PageTemplate에 넣어둠
 		
@@ -252,7 +260,8 @@ public class BoardController {
 		
 		// MyBatis에서 제공하는 >>>RowBounds()<<<
 		// offset, limit
-		RowBounds rowBounds = new RowBounds();
+		int offset = (currentPage - 1) * boardLimit;
+	    RowBounds rowBounds = new RowBounds(offset, boardLimit);
 		
 		// MyBatis에서는 페이징 처리를 위해 RowBounds라는 클래스를 제공
 		// * offset, limit
@@ -271,9 +280,99 @@ public class BoardController {
 		
 		model.addAttribute("list", boardList);
 		model.addAttribute("pageInfo", pageInfo);
-		
+		model.addAttribute("keyword", keyword);	//model에 값을 담아 jsp에서 el로 띄워줄 수 있음
+		model.addAttribute("condition", condition);
 		
 		return "board/list";
 	}
+	
+	@GetMapping("boardForm.do")
+	public String boardFormForwording() {
+	    return "board/insertForm";
+	}
+	
+	@PostMapping("insert.do")
+	public String insert(Board board,
+						 HttpSession session,	//프로젝트 내 파일의 경로 찾기 위해 applicationContext 쓸 목적
+						 MultipartFile upfile,	// MultipartFile[] 여러 개의 파일이 배열로 한 번에 들어옴
+						 Model model) {	
+		//파일의 정보는 MultipartFile 객체 'upfile'에 담겨서 옴. (객체명은 jsp의 form의 name속성에 설정한 이름으로)
+		
+		// log.info("게시글정보 : {}", board);
+		// log.info("파일 정보 : {}", upfile);
+		
+		// 첨부파일 존재 O / X
+		// Multipart객체는 무조건 생성됨!!!!!
+		// => fileName필드에 원본명이 존재하는가 / 없는가로 존재유무 구분
+		
+		// 전달된 파일이 존재할 경우 => 파일 업로드!!
+		
+		if(!upfile.getOriginalFilename().equals("")) {	//파일첨부명이 빈 문자열과 같지 않으면(비어있지 않으면)
+			// 파일명이 다른 파일과 겹치면 업로드될 수 없음!
+			// KH_년월일시분초_랜덤한값.확장자	<= 카카오톡 파일저장명처럼 만들 것임
+			
+			//확장자 가져오기
+			String originName = upfile.getOriginalFilename();	//원래 이름을 가져와서
+			String ext = originName.substring(originName.lastIndexOf("."));	// 파일명에서 substring()(originName의 마지막"."을 기준으로) 뒤의 문자열을 가져오겠다
+			// "abc.ddd.txt"
+			
+			//랜덤한 수 뽑아내기
+			int num = (int)Math.random() * 900 + 1;	// 곱하기 값 : 값의 범위	// 더하기 값 : 시작값
+
+					// 0.0 ~ 0.999999...
+					// 0.0 ~ 99.999999
+					// 0 ~ 99
+					// 1(시작값) ~ 100(값의범위(100개))
+					// 10 ~ 109
+					// 100 ~199
+			
+			// 날짜
+			// log.info("currentTime : {}", new Date());		//뭔... 영어로 나옴
+			String currentTime = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());	//이런 클래스가 있음. 지정한 대로 Date() 함수의 값을 뽑아줌
+			
+			// 파일 저장할 곳 지정
+			String savePath = session.getServletContext().getRealPath("/resources/uploadFiles");	//세션 이용, 본 프로젝트 내 >>>여기서<<< 파일 가져오겠다.
+			
+			// 이름용으로 만든 거(KH_현재시각_랜덤수_확장자) 다 합치기
+			String changeName = "KH_" + currentTime + "_" + num + ext;
+			
+			// 새 파일 만들기
+			// 서버에 파일 업로드 확인 => 제대로 됐으면 파일로의 직접 접근 가능함(누르면 새 창에서 열림)
+			try {
+				upfile.transferTo(new File(savePath + changeName));		// 새 파일 생성 - File() 메서드(io패키지)	//저장경로 + 새이름
+			} catch (IllegalStateException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+			// 첨부파일이 존재한다.?
+			// 1. 업로드 완료
+			// 2. Board객체에 파일의 정보(originName + changeName) 담기
+			board.setOriginName(originName);
+			board.setChangeName(savePath + changeName);
+		}
+		
+		// 이 이후로 DB 감~
+		
+		// 첨부파일이 존재하지 않을 경우 board : 제목 / 내용 / 작성자
+		// 첨부파일이 존재할 경우 board :		제목 / 내용 / 작성자 / 원본명 / 변경된 경로와 이름
+		if(boardService.insert(board) > 0) {
+			
+			session.setAttribute("alertMsg", "게시글 작성 성공");
+			
+			// !!! 무조건 리다이렉트 해야 함. 왜? => 현재 DB에 있는 board 데이터를 들고 가야 해서
+			// 그냥 return "board/list"; 하면 값이 아무것도 없는 페이지가 나타남
+			return "redirect:boardList";
+			
+		} else {
+			
+			model.addAttribute("errorMsg", "게시글 작성 실패");
+			
+			
+			return "common/errorPage";
+		}
+	}
+
 }
 
