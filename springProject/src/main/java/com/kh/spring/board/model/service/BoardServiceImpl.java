@@ -46,26 +46,22 @@ public class BoardServiceImpl implements BoardService {
 
 	@Override
 	public int increaseCount(int boardNo) {
-		// TODO Auto-generated method stub
-		return 0;
+		return boardRepository.increaseCount(sqlSession, boardNo);
 	}
 
 	@Override
 	public Board findById(int boardNo) {
-		// TODO Auto-generated method stub
-		return null;
+		return boardRepository.findById(sqlSession ,boardNo);
 	}
 
 	@Override
 	public int delete(int boardNo) {
-		// TODO Auto-generated method stub
-		return 0;
+		return boardRepository.delete(sqlSession, boardNo);
 	}
 
 	@Override
 	public int update(Board board) {
-		// TODO Auto-generated method stub
-		return 0;
+		return boardRepository.update(sqlSession,board);
 	}
 
 }
