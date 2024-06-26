@@ -154,7 +154,7 @@
 		UPDATE
 				 BOARD
 			SET
-				 STATUS='N'
+				 STATUS   ='N'
 		  WHERE
 		  		 BOARD_NO = #{boardNo}
 	</update>
@@ -164,12 +164,32 @@
 		UPDATE
 				 BOARD
 			SET
-				 BOARD_TITLE = #{boardTitle},
+				 BOARD_TITLE   = #{boardTitle},
 				 BOARD_CONTENT = #{boardContent},
-				 ORIGIN_NAME = #{originName},
-				 CHANGE_NAME = #{changeName}
+				 ORIGIN_NAME   = #{originName},
+				 CHANGE_NAME   = #{changeName}
 		  WHERE
 		  		 BOARD_NO = #{boardNo}
 		    	 
 	</update>
+	
+	<select id="selectImages" resultType="board">
+		SELECT
+	          CHANGE_NAME   changeName,
+	          BOARD_TITLE   boardTitle,
+	          USER_NAME     boardWriter,
+	          BOARD_CONTENT boardContent,
+	          CREATE_DATE   createDate 
+	    FROM
+	          BOARD, MEMBER
+	    WHERE
+	          BOARD.BOARD_WRITER =  MEMBER.USER_ID
+	      AND      
+	          CHANGE_NAME IS NOT NULL
+          AND
+          	  BOARD.STATUS = 'Y'
+	    ORDER
+	       BY
+	          BOARD_NO DESC
+	</select>
 </mapper>

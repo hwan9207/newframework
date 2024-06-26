@@ -24,6 +24,16 @@
                     <label for="userId">* ID : </label>
                     <input type="text" class="form-control" id="userId" value="${sessionScope.loginUser.userId}" name="userId" readonly> <br>
 
+                    <label for="userPwd">* Current PW : </label> <br>
+                    <input style="width:80%; float: left;" type="password" class="form-control" id="checkPwd" value="" > <br>
+					<button type="button" style="margin-left:15px; margin-bottom:30px; " id="pwCheck" class="btn btn-primary" > 확 인 </button>
+
+                    <label for="userPwd">* New PW : </label>
+                    <input type="password" class="form-control" id="userPwd" value="" name="userPwd" > <br>
+
+                    <label for="userPwd">* Check PW : </label>
+                    <input type="password" class="form-control" id="userPwd1" value="" > <br>
+                    
                     <label for="userName">* Name : </label>
                     <input type="text" class="form-control" id="userName" value="${sessionScope.loginUser.userName}" name="userName" required> <br>
 

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.kh.spring.member.model.service.MemberService;
@@ -241,7 +242,7 @@ public class MemberController {
 		//log.info("회원가입 객체 : {}", member);
 		//log.info("평문 : {}", member.getUserPwd());
 		String encPwd = bCryptPasswordEncoder.encode(member.getUserPwd());
-		//log.info("암호화 : {}",encPwd);
+		log.info("암호화 : {}",encPwd);
 		member.setUserPwd(encPwd);
 		if(memberService.insert(member)>0) {
 			viewName= "redirect:/";
@@ -262,7 +263,8 @@ public class MemberController {
 						HttpSession session,
 						Model model) {
 		log.info("수정 요청 실패 :{}",member);
-		
+		String encPwd = bCryptPasswordEncoder.encode(member.getUserPwd());
+		member.setUserPwd(encPwd);
 		if(memberService.update(member)>0) {
 		/*	 
 			포워딩 - 새로고침을 하면 컨트롤러를 계속 호출하게 되어 좋지 않다
@@ -279,6 +281,7 @@ public class MemberController {
 			
 			session은 session 날리기전 까지는 모든 jsp에서 사용 가능 model말고 session에 담자
 		*/	
+			
 			
 			Member loginUser = memberService.login(member);
 			session.setAttribute("loginUser", loginUser);
@@ -321,6 +324,12 @@ public class MemberController {
 			session.setAttribute("alertMsg", "비밀번호가 일치하지 않습니다");
 			return "redirect:mypage.do";
 		}
+	}
+	
+	@ResponseBody
+	@GetMapping("idCheck.do")
+	public String checkId(String checkId) {
+		return memberService.idCheck(checkId) > 0 ? "NNNNN" : "NNNNY";
 	}
 	
 }

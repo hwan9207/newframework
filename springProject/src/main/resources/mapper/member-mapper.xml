@@ -61,6 +61,7 @@
 		UPDATE
 				MEMBER
 			SET
+				USER_PWD = #{userPwd},
 				USER_NAME = #{userName},
 				EMAIL = #{email},
 				AGE = #{age},
@@ -82,4 +83,13 @@
 				 USER_ID = #{userId} <!-- 파라미터값 1개만 넘기는 경우 변수명이 일치하지 않아도 인식함 -->
 	</update>
 	
+	<select id="idCheck" resultType="_int" parameterType="string">
+		
+		SELECT
+				  COUNT(*)
+			FROM
+				  MEMBER
+			WHERE
+				  USER_ID = #{checkId}
+	</select>
 </mapper>
