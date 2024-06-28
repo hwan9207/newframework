@@ -113,5 +113,121 @@
 			
 	</script>
 	
+	<h3> DB에서 SELECT문을 이용해서 조회했다는 가정하에 VO객체를 응답 받아서 화면상에 출력</h3>
+	
+	조회 할 음식번호 : <input type = "number" id="menuNo"/> <br>
+	
+	<div></div>
+	
+	<button id="select-btn">조회</button>
+	
+	<div id="today-menu">
+
+	</div>
+	
+	<script>
+   
+      window.onload = () => {
+         
+         document.getElementById('select-btn').onclick = () => {      //'select-btn': 이벤트 타겟, .onclick : 이벤트 타입, 그 다음 괄호 : 이벤트핸들러(어떤이벤트냐(여기선AJAX))
+            
+            $.ajax({
+               url : 'ajax2.do',
+               type : 'get',
+               data : {   //넘기는 데이터. (Key, Value)
+                  menuNumber : document.getElementById('menuNo').value   // Value값은 input요소의 value값에 있다.(id로 받아오기)
+               },
+               success : result => {
+                  
+                  console.log(result);   //항상 내가 원하는 값이 나오는 게 맞는지 확인하고 진행.
+                  
+                  const obj = {
+                      "menuNumber" : "1",
+                      "menuName" : "순두부",
+                      "price" : "9500",
+                      "material" : "순두부"
+                  };
+                   console.log(obj);
+                   
+                   const menu = '<ul> 오늘의 메뉴 :'
+                   			  + '<li>' + result.menuName + '</li>'
+                   			  + '<li>' + result.price + '원</li>'
+                   			  + '<li>' + result.material + '</li>'
+                   			  + '</ul>';	
+                   document.getElementById('today-menu').innerHTML =  menu;
+               },
+               error : e => {
+                  console.log(e);
+               }   // 여기까지 하고 뒷 단 가서 Controller 작업
+            });
+         }
+      }
+      
+   </script>
+   
+   <br><br><br><br><br><br><br><br><br><br>
+   
+   <h3>3. 조회 후 리스트를 응답 받아서 출력</h3>
+   
+   <button onclick ="findAll()">메뉴 전체 조회</button>
+   <br><br><br><br>
+   
+   <table border="1" id="find-result">
+   		<thead>
+   			<tr>
+	   			<th>메뉴명</th>
+	   			<th>가격</th>
+	   			<th>재료</th>
+   			</tr>
+   		</thead>
+   		<tbody id="tbody">
+   		
+   		</tbody>
+   </table>
+   
+   <script>
+   		function findAll(){
+   			$.ajax({
+   				url : 'find.do',
+   				type : 'get',
+   				success : result => {
+   					
+   					console.log(result);
+   					
+   					const tbodyEl = document.getElementById('tbody');
+   					
+   					result.map(o => {
+   						//console.log(o);
+   						//console.log(i);
+   						
+	   					const trEl = document.createElement('tr');
+	   					
+	   					const tdFirst = document.createElement('td');
+	   					const firstText = document.createTextNode(o.menuName);
+	   					tdFirst.style.width = '200px';
+	   					tdFirst.appendChild(firstText);
+	   					
+	   					const tdSecond = document.createElement('td');
+	   					const secondText = document.createTextNode(o.price);
+	   					tdSecond.style.width='200px';
+	   					tdSecond.appendChild(secondText);
+	   					
+	   					const tdThird = document.createElement('td');
+	   					const thridText = document.createTextNode(o.material);
+	   					tdThird.style.width='100px';
+	   					tdThird.appendChild(thridText);
+	   					
+	   					trEl.appendChild(tdFirst);
+	   					trEl.appendChild(tdSecond);
+	   					trEl.appendChild(tdThird);
+	   					
+	   					tbodyEl.appendChild(trEl);
+   						
+   					});
+   					
+   				}
+   			})
+   		}
+   </script>
 </body>
 </html>

@@ -108,38 +108,94 @@
             <!-- 댓글 기능은 나중에 ajax 배우고 나서 구현할 예정! 우선은 화면구현만 해놓음 -->
             <table id="replyArea" class="table" align="center">
                 <thead>
-                    <tr>
-                        <th colspan="2">
-                            <textarea class="form-control" name="" id="content" cols="55" rows="2" style="resize:none; width:100%;"></textarea>
-                        </th>
-                        <th style="vertical-align:middle"><button class="btn btn-secondary">등록하기</button></th> 
-                    </tr>
-                    <tr>
-                        <td colspan="3">댓글(<span id="rcount">3</span>)</td>
-                    </tr>
+                
+                	<c:choose>
+	                    <c:when test="${ empty sessionScope.loginUser }">
+		                    <tr>
+		                        <th colspan="2">
+		                            <textarea class="form-control" name="" id="content" cols="55" rows="2" style="resize:none; width:100%;"></textarea>
+		                        </th>
+		                        <th style="vertical-align:middle"><button class="btn btn-secondary">등록하기</button></th> 
+		                    </tr>
+	                    </c:when>
+	                    <c:otherwise>
+		                    <tr>
+		                        <th colspan="2">
+		                            <textarea class="form-control" name="" id="content" cols="55" rows="2" style="resize:none; width:100%;"></textarea>
+		                        </th>
+		                        <th style="vertical-align:middle"><button onclick="saveReply();" class="btn btn-secondary">등록하기</button></th> 
+		                    </tr>
+		                    <tr>
+		                        <td colspan="3">댓글(<span id="rcount"></span>)</td>
+		                    </tr>
+	                    </c:otherwise>
+                	</c:choose>
+
                 </thead>
                 <tbody>
-                    <tr>
-                        <th>user02</th>
-                        <td>ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ꿀잼</td>
-                        <td>2023-03-12</td>
-                    </tr>
-                    <tr>
-                        <th>user01</th>
-                        <td>재밌어요</td>
-                        <td>2023-03-11</td>
-                    </tr>
-                    <tr>
-                        <th>admin</th>
-                        <td>댓글입니다!!</td>
-                        <td>2023-03-10</td>
-                    </tr>
+                    
                 </tbody>
             </table>
         </div>
         <br><br>
 
     </div>
+    
+    <script>
+    	function saveReply(){
+    		if($('#content').val().trim() != ''){
+    			$.ajax({
+    				url : 'reply',
+    				data : {
+    					refBoardNo : ${ board.boardNo },
+    					replyContent : $('#content').val(),
+    					replyWriter : '${ sessionScope.loginUser.userId}' //el은 서버에서 사용.. 
+    					// java랑 script 구분...? ' '없이 el로 보내면 그냥 변수로 인식함 문자열로 데이타 보내줘야함
+    				},
+    				type : 'post',
+    				success : result => {
+    					if(result == 'success') {
+    						selectReply();
+    						$('#content').val('');
+    					}
+    				}
+    				
+    					
+    			});
+    		} else {
+    			alert('장난치지마라 새갸');
+    		}
+    	}
+    	
+    	$(() =>{
+    		selectReply();
+    	});
+    
+    	function selectReply() {
+    		$.ajax({
+    			url  : 'reply',
+    			type : 'get',
+    		 	data : {
+    		 		boardNo :  ${ board.boardNo } //게시판에 클릭해서 들어갈때 model에 게시판 객체 값이 저장되어 있음
+    		 	},
+    		 	success : result => {
+    		 		//consloe.log(result);
+    		 		
+    		 		let resultStr = '';
+    		 		
+    		 		for(let i in result){
+    		 			resultStr += '<tr>'
+    		 						+ '<td>' + result[i].replyWriter + '</td>'
+    		 						+ '<td>' + result[i].replyContent + '</td>'
+    		 						+ '<td>' + result[i].createDate + '</td>'
+    		 						+ '</tr>';
+    		 		}
+    		 		$('#replyArea tbody').html(resultStr);
+    		 		$('#rcount').text(result.length);
+    		 	}
+    		});
+    	}
+    </script>
     
     <jsp:include page="../common/footer.jsp" />
     

@@ -3,193 +3,298 @@
     PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="boardMapper">
-	
-	<sql id="selectBoard">
-		
-	</sql>
-	
-	<select id="boardCount" resultType="_int">
-		SELECT
-				  COUNT(BOARD_NO)
-			FROM
-				  BOARD
-			WHERE
-				  STATUS = 'Y'
-	</select>
-	
-	<select id="findAll" resultType="board" parameterType="Map">
-		SELECT
-		         BOARD_NO boardNo,
-		         BOARD_TITLE boardTitle,
-		         BOARD_WRITER boardWriter,
-		         COUNT,
-		         CREATE_DATE createDate,
-		         ORIGIN_NAME originName,
-		         ROWNUM RNUM    
-		   FROM        
-		         (SELECT
-		                 BOARD_NO,
-		                 BOARD_TITLE,
-		                 BOARD_WRITER,
-		                 COUNT,
-		                 CREATE_DATE,
-		                 ORIGIN_NAME,
-		                 CHANGE_NAME,
-		                 ROWNUM RNUM
-		            FROM
-		                (SELECT
-		                         BOARD_NO,
-		                         BOARD_TITLE,
-		                         BOARD_WRITER,
-		                         COUNT,
-		                         CREATE_DATE,
-		                         CHANGE_NAME,
-		                         ORIGIN_NAME
-		                   FROM
-		                         BOARD
-		                  WHERE
-		                         STATUS = 'Y'           
-		                  ORDER 
-		                     BY 
-		                         BOARD_NO DESC))
-          WHERE 
-                 RNUM BETWEEN #{startValue}  AND #{endValue} 
-	</select>
-	
-	<select id="searchCount" parameterType="hashmap" resultType="int">
-		SELECT
-				  COUNT(BOARD_NO)
-			FROM
-				  BOARD
-			WHERE
-				  STATUS = 'Y'
-		  <if test="condition == 'writer'">
+
+   <!-- 중복되서 작성되는 항목 따로 빼서 selectBoard로 담아줌 -->
+   <sql id="selectBoard">
+      SELECT
+               BOARD_NO boardNo,
+               BOARD_TITLE boardTitle,
+               BOARD_CONTENT boardContent,
+               BOARD_WRITER boardWriter,
+               CREATE_DATE createDate,
+               ORIGIN_NAME originName,
+               CHANGE_NAME changeName,
+               Count count     
+   </sql>
+
+   <select id="boardCount" resultType="_int">   <!-- resultType과 parameterType의 차이점? -->
+      SELECT
+            COUNT(BOARD_NO)
+        FROM
+              BOARD
+         WHERE
+               STATUS='Y' 
+   </select>
+   
+   <select id="findAll" resultType="board" parameterType="map">
+   
+   <include refid="selectBoard"/>
+       FROM
+            (SELECT 
+                    BOARD_NO,
+                    BOARD_TITLE,
+                     BOARD_WRITER,
+                     BOARD_CONTENT,
+                     COUNT,
+                    CREATE_DATE,
+                    ORIGIN_NAME,
+                    ROWNUM RNUM,
+                    CHANGE_NAME
+              FROM
+                       (SELECT 
+                             BOARD_NO,
+                             BOARD_TITLE,
+                             BOARD_WRITER,
+                             BOARD_CONTENT,
+                             COUNT,
+                             CREATE_DATE,
+                             ORIGIN_NAME,
+                             CHANGE_NAME
+                        FROM
+                             BOARD
+                       WHERE
+                             STATUS = 'Y'                               
+                       ORDER
+                          BY
+                             BOARD_NO DESC))               
+                  WHERE
+                        RNUM BETWEEN #{startValue} AND #{endValue} 
+   </select>
+   
+   <select id="searchCount" parameterType="hashmap" resultType="int">
+      SELECT
+              COUNT(BOARD_NO)
+        FROM
+              BOARD
+       WHERE
+              STATUS = 'Y'
+        <if test="condition == 'writer'">      
+         AND 
+               BOARD_WRITER 
+         </if>
+        <if test="condition == 'title'">
+         AND
+              BOARD_TITLE 
+        </if>
+        <if test="condition == 'content'">
+         AND
+              BOARD_CONTENT 
+        </if>
+              LIKE '%' || #{keyword} || '%'
+   </select>
+   
+   <!-- 검색 결과-->
+   <select id="findByConditionAndKeyword" parameterType="hashmap" resultType="board">
+      SELECT
+            BOARD_NO boardNo,
+               BOARD_TITLE boardTitle,
+               BOARD_CONTENT boardContent,
+               BOARD_WRITER boardWriter,
+               CREATE_DATE createDate,
+               ORIGIN_NAME originName
+         FROM
+               BOARD
+        WHERE
+              STATUS = 'Y'
+         <choose>
+            <when test="condition == 'writer'">
+               AND BOARD_WRITER
+            </when>
+            <when test="condition == 'title'">
+               AND BOARD_TITLE
+            </when>
+         <otherwise>
+            AND BOARD_CONTENT
+         </otherwise>
+       </choose>
+              LIKE '%' || #{keyword} || '%'
+         ORDER
+            BY
+              BOARD_NO DESC
+   </select>
+   
+   <insert id="insert" parameterType="board">
+         INSERT
+           INTO
+                 BOARD
+                 (
+                 BOARD_NO,
+                 BOARD_TITLE,
+                 BOARD_CONTENT,
+                 BOARD_WRITER,
+                 ORIGIN_NAME,
+                 CHANGE_NAME
+                 )
+         VALUES
+               (
+               SEQ_BNO.NEXTVAL,
+               #{boardTitle},
+               #{boardContent},
+               #{boardWriter},
+               #{originName},
+               #{changeName}
+               )
+   </insert>
+   
+   <update id="increaseCount" parameterType="_int">
+         UPDATE
+               BOARD
+            SET
+                  COUNT = COUNT + 1
+          WHERE
+                BOARD_NO = #{boardNo}
             AND
-                  BOARD_WRITER 
-		  </if>  
-		  <if test="condition == 'title'">
+                  STATUS = 'Y'
+   </update>
+   
+   <select id="findById" parameterType="_int" resultType="board">
+      <include refid="selectBoard" />
+       FROM
+            BOARD
+      WHERE
+            STATUS = 'Y'
+        AND
+            BOARD_NO = #{boardNo}
+   </select>
+   
+   <update id="delete" parameterType="_int">
+         UPDATE
+               BOARD
+            SET
+                  STATUS = 'N'
+          WHERE
+                BOARD_NO = #{boardNo}
+   </update>
+   
+   <update id="update" parameterType="board">
+         UPDATE
+               BOARD
+            SET
+                  BOARD_TITLE = #{boardTitle},
+                  BOARD_CONTENT = #{boardContent},
+                  ORIGIN_NAME = #{originName},
+                  CHANGE_NAME = #{changeName}
+          WHERE
+                BOARD_NO = #{boardNo}
+   </update>
+   
+   <select id="selectImages" resultType="board">
+      SELECT
+              CHANGE_NAME    changeName,
+              BOARD_TITLE    boardTitle,
+              USER_NAME       boardWriter,
+              BOARD_CONTENT    boardContent,
+              CREATE_DATE    createDate
+        FROM
+              BOARD, MEMBER
+       WHERE
+              BOARD.BOARD_WRITER = MEMBER.USER_ID
+         AND
+              CHANGE_NAME IS NOT NULL
+         AND 
+               BOARD.STATUS = 'Y'
+       ORDER
+          BY
+              BOARD_NO DESC
+   </select>
+   
+   <select id="selectReply" resultType="reply" parameterType="_int">
+         SELECT
+               REPLY_NO replyNo,
+               REPLY_CONTENT replyContent,
+               REPLY_WRITER replyWriter,
+               TO_CHAR(CREATE_DATE, 'YYYY-MM-DD') AS "createDate"
+           FROM
+                 REPLY
+          WHERE
+                STATUS = 'Y'
             AND
-                  BOARD_TITLE  
-		  </if>  
-		  <if test="condition == 'content'">
-            AND
-                  BOARD_CONTENT 
-		  </if>  
-		  		  LIKE '%' || #{keyword} ||  '%'
-	</select>
-	
-	<select id="findByConditionAndKeyword" parameterType="hashmap" resultType="board">
-		SELECT
-				BOARD_NO boardNo,
-				BOARD_TITLE boardTitle,
-				BOARD_CONTENT boardContent,
-				BOARD_WRITER boardWriter,
-				CREATE_DATE createDate,
-				ORIGIN_NAME originName
-		 FROM
-		 		BOARD
- 		 WHERE	
- 		 		STATUS = 'Y'
-	 <choose>
-	 	<when test="condition == 'writer'">
-	 	   AND  BOARD_WRITER
-	 	</when>
-	 	<when test="condition == 'title'">
-	 	   AND  BOARD_TITLE
-	 	</when>
-	 	<otherwise>
-	 	   AND  BOARD_CONTNET
-	 	</otherwise>
-	 </choose>
-	 		LIKE '%' || #{keyword} || '%' ORDER BY BOARD_NO DESC
-	</select>
-	
-	<insert id="insert" parameterType="board"> 
-		INSERT 
-			INTO 
-				 BOARD (
-				 	 BOARD_NO, 
-				 	 BOARD_TITLE, 
-				 	 BOARD_CONTENT, 
-				 	 BOARD_WRITER, 
-				 	 ORIGIN_NAME, 
-				 	 CHANGE_NAME ) 
-	 	  VALUES 
-	 	  				( 
-	  				SEQ_BNO.NEXTVAL, 
-	  				#{boardTitle}, 
-	  				#{boardContent}, 
-	  				#{boardWriter}, 
-	  				#{originName}, 
-	  				#{changeName} ) 
-	</insert>
-	
-	<update id="increaseCount" parameterType="_int">
-		UPDATE
-				BOARD
-			SET
-				COUNT = COUNT + 1
-		  WHERE 
-		  		BOARD_NO = #{boardNo}
-	  		AND
-	  			STATUS = 'Y' 	
-	</update>
-	
-	<select id="findById" parameterType="_int" resultType="board">
-		SELECT
-				 BOARD_NO boardNo,
-				 BOARD_TITLE boardTitle,
-				 BOARD_WRITER boardWriter,
-				 BOARD_CONTENT boardContent,
-				 ORIGIN_NAME originName,
-				 CHANGE_NAME changeName,
-				 CREATE_DATE createDate
-			FROM
-				 BOARD
-			WHERE
-				 BOARD_NO= #{boardNo}	
-	</select>
-	
-	<update id="delete" parameterType="_int">
-		UPDATE
-				 BOARD
-			SET
-				 STATUS   ='N'
-		  WHERE
-		  		 BOARD_NO = #{boardNo}
-	</update>
-	
-	<update id="update" parameterType="board">
-	
-		UPDATE
-				 BOARD
-			SET
-				 BOARD_TITLE   = #{boardTitle},
-				 BOARD_CONTENT = #{boardContent},
-				 ORIGIN_NAME   = #{originName},
-				 CHANGE_NAME   = #{changeName}
-		  WHERE
-		  		 BOARD_NO = #{boardNo}
-		    	 
-	</update>
-	
-	<select id="selectImages" resultType="board">
-		SELECT
-	          CHANGE_NAME   changeName,
-	          BOARD_TITLE   boardTitle,
-	          USER_NAME     boardWriter,
-	          BOARD_CONTENT boardContent,
-	          CREATE_DATE   createDate 
-	    FROM
-	          BOARD, MEMBER
-	    WHERE
-	          BOARD.BOARD_WRITER =  MEMBER.USER_ID
-	      AND      
-	          CHANGE_NAME IS NOT NULL
-          AND
-          	  BOARD.STATUS = 'Y'
-	    ORDER
-	       BY
-	          BOARD_NO DESC
-	</select>
+                  REF_BNO = #{boardNo}
+          ORDER
+             BY
+                REPLY_NO DESC
+   </select>
+   
+   <select id="insertReply" parameterType="reply">
+         INSERT
+           INTO
+                 REPLY
+                 (
+                 REPLY_NO,
+                 REPLY_CONTENT,
+                 REPLY_WRITER,
+                 REF_BNO
+                 )
+          VALUES
+                (
+                SEQ_RNO.NEXTVAL,
+                #{replyContent},
+                #{replyWriter},
+                #{refBoardNo}
+                )
+   </select>
+   
+   <resultMap type="board" id="boardResultSet">
+      <id column="BOARD_NO" property="boardNo" />
+      <result column="BOARD_TITLE" property="boardTitle"/>
+      <result column="BOARD_CONTENT" property="boardContent"/>
+      <result column="BOARD_WRITER" property="boardWriter"/>
+      <result column="COUNT" property="count"/>
+      <result column="ORIGIN_NAME" property="originName"/>
+      <result column="CHANGE_NAME" property="changeName"/>
+      <result column="B_CREATE_DATE" property="createDate"/>
+      <collection resultMap="replyResultSet"   property="replyList" />      <!-- Board에 있는 List<Reply> reply에 아래 Reply의 객체를 담기 위해 --> <!-- 1:다 테이블 관계는 Collection을 쓴다. -->
+   </resultMap>
+   
+      <resultMap id="replyResultSet" type="reply">
+         <id column="REPLY_NO"   property="replyNo" />
+         <result column="REPLY_CONTENT"   property="replyContent" />
+         <result column="REPLY_WRITER"   property="replyWriter" />
+         <result column="R_CREATE_DATE"   property="createDate" />
+         <result column="REF_BNO"   property="refBoardNo" />
+      </resultMap>
+   
+   <select id="boardAndReply" parameterType="_int" resultMap="boardResultSet">
+         SELECT
+            BOARD_NO,
+            BOARD_TITLE,
+            BOARD_CONTENT,
+            BOARD_WRITER,
+            COUNT,
+            ORIGIN_NAME,
+            CHANGE_NAME,
+            REPLY_NO,
+            REPLY_CONTENT,
+            REPLY_WRITER,
+            REF_BNO,
+            BOARD.CREATE_DATE B_CREATE_DATE,
+            REPLY.CREATE_DATE R_CREATE_DATE
+          FROM
+             BOARD
+        LEFT
+        JOIN
+            REPLY ON(BOARD_NO = REF_BNO)
+       WHERE
+            BOARD_NO = #{boardNo}
+   </select>
+   
+   <select id="findTopFiveBoard" resultType="board">
+         <include refid="selectBoard" />
+        FROM
+              (SELECT
+                      BOARD_NO,
+                      BOARD_TITLE,
+                      BOARD_WRITER,
+                      BOARD_CONTENT,
+                      COUNT,
+                      CREATE_DATE,
+                      ORIGIN_NAME,
+                      CHANGE_NAME
+                FROM
+                      BOARD 
+               ORDER
+                  BY
+                      COUNT DESC)
+       WHERE ROWNUM BETWEEN 1 AND 5
+   </select>
 </mapper>

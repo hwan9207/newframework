@@ -22,6 +22,9 @@
 		<beans:property name="suffix" value=".jsp" />
 	</beans:bean>
 	
+	
+	
+	
 	<context:component-scan base-package="com.kh.spring" />
 	<!--
 		base-package에서 설정된 패키지와 그 하위에 존재하는 모든 패키지를 감시해서

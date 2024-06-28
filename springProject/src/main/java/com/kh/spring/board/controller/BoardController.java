@@ -16,11 +16,15 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.google.gson.Gson;
 import com.kh.spring.board.model.service.BoardService;
 import com.kh.spring.board.model.vo.Board;
+import com.kh.spring.board.model.vo.Reply;
 import com.kh.spring.common.model.vo.PageInfo;
 import com.kh.spring.common.template.PageTemplate;
 
@@ -489,6 +493,33 @@ public class BoardController {
 		//List<Board> imaegs = boardService.selectImges();
 		model.addAttribute("board", boardService.selectImges());
 		return "board/imageList";
+	}
+	
+	
+	@ResponseBody
+	@GetMapping(value="reply", produces="application/json; charset=UTF-8")
+	public String selectReply(int boardNo) {
+		return new Gson().toJson(boardService.selectReply(boardNo));
+	}
+	
+	
+	//통상적인 select get, insert post
+	@ResponseBody
+	@PostMapping("reply")
+	public String saveReply(Reply reply) {
+		return boardService.insertReply(reply) > 0 ? "success" : "fail";
+	}
+	
+	@ResponseBody
+	@GetMapping("board-reply")
+	public Board boardAndReply(int boardNo) {
+		return boardService.boardAndReply(boardNo);
+	}
+	
+	
+	@GetMapping("var")
+	public String varForward() {
+		return "common/variable.jsp";
 	}
 }
 

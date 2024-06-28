@@ -104,7 +104,7 @@
 
     </div>
 
-    <jsp:include page="" />
+    <jsp:include page="../common/footer.jsp" />
 
 </body>
 </html>
