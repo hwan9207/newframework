@@ -7,6 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -263,9 +264,19 @@ public class MemberController {
 						HttpSession session,
 						Model model) {
 		log.info("수정 요청 실패 :{}",member);
-		String encPwd = bCryptPasswordEncoder.encode(member.getUserPwd());
-		member.setUserPwd(encPwd);
+		//String encPwd = bCryptPasswordEncoder.encode(member.getUserPwd());
+		//member.setUserPwd(encPwd);
+		Member currentUser = (Member) session.getAttribute("loginUser");
+		
+		 if (member.getUserPwd() != null && !member.getUserPwd().isEmpty()) {
+		        String encPwd = bCryptPasswordEncoder.encode(member.getUserPwd());
+		        member.setUserPwd(encPwd);
+		    } else {
+		        member.setUserPwd(currentUser.getUserPwd());
+		    }
+		
 		if(memberService.update(member)>0) {
+			
 		/*	 
 			포워딩 - 새로고침을 하면 컨트롤러를 계속 호출하게 되어 좋지 않다
 				   유지보수가 힘들다 페이지명이 변경시 다 수작업으로 변경 해야함
@@ -331,6 +342,17 @@ public class MemberController {
 	public String checkId(String checkId) {
 		return memberService.idCheck(checkId) > 0 ? "NNNNN" : "NNNNY";
 	}
+	
+	@GetMapping("/pwCheck")
+    @ResponseBody
+    public String checkPw(@RequestParam("checkPwd") String checkPwd, HttpSession session) {
+        Member loginUser = (Member) session.getAttribute("loginUser");
+        if (loginUser != null && bCryptPasswordEncoder.matches(checkPwd, loginUser.getUserPwd())) {
+            return "success";
+        } else {
+            return "fail";
+        }
+    }
 	
 }
 
